@@ -17,10 +17,6 @@ set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden)
 target_compile_options(${PLUGIN_NAME} PRIVATE -Wall -Wextra -Werror)
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
-target_include_directories(${PLUGIN_NAME} PRIVATE
-  "${CMAKE_CURRENT_SOURCE_DIR}/settings")
-target_include_directories(${PLUGIN_NAME} INTERFACE
-  "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
@@ -38,7 +34,16 @@ if(GLIB_FOUND)
     target_compile_definitions(${PLUGIN_NAME} PRIVATE USE_LIBHANDY)
   endif()
 
-  add_subdirectory(libhandy)
+  if(USE_SYSTEM_LIBHANDY)
+    pkg_check_modules(HANDY REQUIRED IMPORTED_TARGET libhandy-1)
+    target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::HANDY)
+  else()
+    target_include_directories(${PLUGIN_NAME} PRIVATE
+      "${CMAKE_CURRENT_SOURCE_DIR}/settings")
+    target_include_directories(${PLUGIN_NAME} INTERFACE
+      "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    add_subdirectory(libhandy)
+  endif()
   target_compile_definitions(${PLUGIN_NAME} PUBLIC HAVE_LIBHANDY)
   target_link_libraries(${PLUGIN_NAME} PUBLIC handy)
   set_target_properties(${PLUGIN_NAME}
